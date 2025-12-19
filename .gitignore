@@ -1,0 +1,13 @@
+# Zig artifacts
+.zig-cache/
+zig-out/
+
+# Binary files
+*.exe
+*.pdb
+*.obj
+*.o
+
+# OS specific
+Thumbs.db
+.DS_Store

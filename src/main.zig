@@ -19,7 +19,7 @@ const ViewParams = extern struct {
     width: u32,
     height: u32,
     max_iter: u32,
-    padding: u32,
+    palette_index: u32,
 };
 
 const State = struct {
@@ -33,6 +33,8 @@ const State = struct {
     is_fullscreen: bool = false,
     windowed_rect: c.RECT = undefined,
     windowed_style: c.DWORD = 0,
+    max_iter: u32 = 256,
+    palette_index: u32 = 0,
 };
 
 var state = State{};
@@ -237,8 +239,8 @@ fn render() void {
         .rotation = @floatCast(state.rotation),
         .width = state.width,
         .height = state.height,
-        .max_iter = 256,
-        .padding = 0,
+        .max_iter = state.max_iter,
+        .palette_index = state.palette_index,
     };
 
     var mapped: c.D3D11_MAPPED_SUBRESOURCE = undefined;
@@ -313,10 +315,24 @@ fn drawInfoOverlay() void {
         c.CLEARTYPE_QUALITY, c.DEFAULT_PITCH | c.FF_DONTCARE, "Consolas");
     const old_font = c.SelectObject(hdc, hfont);
 
+    const palette_names = [_][]const u8{ "Classic", "Fire", "Ocean", "Purple Haze", "Rainbow", "Neon" };
+    const palette_name = palette_names[state.palette_index];
+
     var buf: [512]u8 = undefined;
     const info = std.fmt.bufPrintZ(&buf,
-        "Center: ({d:.6}, {d:.6})\nScale: {d:.6}\nRotation: {d:.2} rad\nResolution: {}x{}\n\nControls:\nArrows: Zoom/Rotate | WASD: Move\nF1: Toggle Info | F11: Fullscreen\nESC/Ctrl+W: Exit",
-        .{ state.center_x, state.center_y, state.scale, state.rotation, state.width, state.height }
+        \\Center:         ({d:.6}, {d:.6})
+        \\Scale:          {d:.6}
+        \\Rotation:       {d:.2} rad
+        \\Resolution:     {}x{}
+        \\Max Iterations: {}
+        \\Palette:        {s}
+        \\
+        \\Controls:
+        \\Arrows:     Zoom/Rotate | WASD: Move
+        \\[/]:        Iterations  | ,/.:  Palette
+        \\F1:         Toggle Info | F11:  Fullscreen
+        \\ESC/Ctrl+W: Exit
+        ,.{ state.center_x, state.center_y, state.scale, state.rotation, state.width, state.height, state.max_iter, palette_name }
     ) catch {
         _ = c.SelectObject(hdc, old_font);
         _ = c.DeleteObject(hfont);
@@ -406,6 +422,18 @@ fn handleInput(vk: c.WPARAM) void {
         'D' => {
             state.center_x += move_speed * cos_r;
             state.center_y += move_speed * sin_r;
+        },
+        c.VK_OEM_6 => { // ] key
+            state.max_iter = @min(state.max_iter + 32, 4096);
+        },
+        c.VK_OEM_4 => { // [ key
+            state.max_iter = @max(state.max_iter - 32, 32);
+        },
+        c.VK_OEM_COMMA => { // , key
+            state.palette_index = (state.palette_index - 1) % 6;
+        },
+        c.VK_OEM_PERIOD => { // . key
+            state.palette_index = (state.palette_index + 1) % 6;
         },
         c.VK_F1 => state.show_info = !state.show_info,
         c.VK_F11 => toggleFullscreen(),

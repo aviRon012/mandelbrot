@@ -5,6 +5,7 @@ A high-performance Mandelbrot set visualizer written in Zig. It leverages a Dire
 ## Features
 
 - Real-time Mandelbrot set rendering using GPU compute shaders.
+- Multiple color palettes for varied fractal visualizations.
 - Smooth zooming, movement, and rotation.
 - Borderless fullscreen support.
 - Live information overlay.
@@ -16,6 +17,8 @@ A high-performance Mandelbrot set visualizer written in Zig. It leverages a Dire
 | **W, A, S, D** | Move the view |
 | **Up / Down Arrows** | Zoom in / Zoom out |
 | **Left / Right Arrows** | Rotate the view |
+| **[ / ]** | Decrease / Increase maximum iterations |
+| **, / .** | Cycle through color palettes |
 | **F1** | Toggle info overlay |
 | **F11** | Toggle fullscreen |
 | **ESC / Ctrl+W** | Exit |

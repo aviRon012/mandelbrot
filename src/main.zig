@@ -292,7 +292,7 @@ fn render() void {
 fn drawInfoOverlay() void {
     // Important: We need to flush D3D11 commands before getting the DC
     context.?.lpVtbl.*.Flush.?(context.?);
-    
+
     var back_buffer: ?*c.ID3D11Texture2D = null;
     var hr = swap_chain.?.lpVtbl.*.GetBuffer.?(swap_chain.?, 0, &win32.IID_ID3D11Texture2D, @ptrCast(&back_buffer));
     if (hr < 0) return;
@@ -306,13 +306,11 @@ fn drawInfoOverlay() void {
     var hdc: c.HDC = undefined;
     hr = dxgi_surface.?.lpVtbl.*.GetDC.?(dxgi_surface.?, c.FALSE, &hdc);
     if (hr < 0) return;
-    
+
     _ = c.SetBkMode(hdc, c.TRANSPARENT);
     _ = c.SetTextColor(hdc, 0x00FFFFFF);
-    
-    const hfont = c.CreateFontA(20, 0, 0, 0, c.FW_BOLD, 0, 0, 0,
-        c.DEFAULT_CHARSET, c.OUT_DEFAULT_PRECIS, c.CLIP_DEFAULT_PRECIS,
-        c.CLEARTYPE_QUALITY, c.DEFAULT_PITCH | c.FF_DONTCARE, "Consolas");
+
+    const hfont = c.CreateFontA(20, 0, 0, 0, c.FW_BOLD, 0, 0, 0, c.DEFAULT_CHARSET, c.OUT_DEFAULT_PRECIS, c.CLIP_DEFAULT_PRECIS, c.CLEARTYPE_QUALITY, c.DEFAULT_PITCH | c.FF_DONTCARE, "Consolas");
     const old_font = c.SelectObject(hdc, hfont);
 
     const palette_names = [_][]const u8{ "Classic", "Fire", "Ocean", "Purple Haze", "Rainbow", "Neon" };
@@ -332,8 +330,7 @@ fn drawInfoOverlay() void {
         \\[/]:        Iterations  | ,/.:  Palette
         \\F1:         Toggle Info | F11:  Fullscreen
         \\ESC/Ctrl+W: Exit
-        ,.{ state.center_x, state.center_y, state.scale, state.rotation, state.width, state.height, state.max_iter, palette_name }
-    ) catch {
+    , .{ state.center_x, state.center_y, state.scale, state.rotation, state.width, state.height, state.max_iter, palette_name }) catch {
         _ = c.SelectObject(hdc, old_font);
         _ = c.DeleteObject(hfont);
         _ = dxgi_surface.?.lpVtbl.*.ReleaseDC.?(dxgi_surface.?, null);
@@ -342,20 +339,17 @@ fn drawInfoOverlay() void {
 
     var rect = c.RECT{ .left = 10, .top = 10, .right = 600, .bottom = 300 };
     _ = c.DrawTextA(hdc, info.ptr, @intCast(info.len), &rect, c.DT_LEFT | c.DT_TOP);
-    
+
     _ = c.SelectObject(hdc, old_font);
     _ = c.DeleteObject(hfont);
-    
+
     // CRITICAL: Must release DC before any other D3D operations
     _ = dxgi_surface.?.lpVtbl.*.ReleaseDC.?(dxgi_surface.?, null);
 }
 
 fn updateWindowTitle() void {
     var buf: [256]u8 = undefined;
-    const title = std.fmt.bufPrintZ(&buf,
-        "Mandelbrot Renderer (GPU Compute) | Press F1 for info",
-        .{}
-    ) catch return;
+    const title = std.fmt.bufPrintZ(&buf, "Mandelbrot Renderer (GPU Compute) | Press F1 for info", .{}) catch return;
 
     _ = c.SetWindowTextA(hwnd_global, title.ptr);
 }
@@ -363,7 +357,7 @@ fn updateWindowTitle() void {
 fn handleResize(w: u32, h: u32) void {
     if (w == 0 or h == 0) return;
     if (swap_chain == null) return;
-    
+
     state.width = w;
     state.height = h;
 
@@ -371,7 +365,7 @@ fn handleResize(w: u32, h: u32) void {
     if (output_texture) |t| _ = t.lpVtbl.*.Release.?(@ptrCast(t));
     if (output_uav) |u| _ = u.lpVtbl.*.Release.?(@ptrCast(u));
     if (output_srv) |s| _ = s.lpVtbl.*.Release.?(@ptrCast(s));
-    
+
     rtv = null;
     output_texture = null;
     output_uav = null;
@@ -381,7 +375,7 @@ fn handleResize(w: u32, h: u32) void {
     _ = swap_chain.?.lpVtbl.*.ResizeBuffers.?(swap_chain.?, 1, w, h, c.DXGI_FORMAT_B8G8R8A8_UNORM, c.DXGI_SWAP_CHAIN_FLAG_GDI_COMPATIBLE);
 
     createRenderTarget() catch return;
-    
+
     var tex_desc = std.mem.zeroes(c.D3D11_TEXTURE2D_DESC);
     tex_desc.Width = w;
     tex_desc.Height = h;
@@ -561,7 +555,7 @@ pub fn main() !void {
             _ = c.TranslateMessage(&msg);
             _ = c.DispatchMessageA(&msg);
         }
-        
+
         if (running) render();
     }
 }

@@ -7,6 +7,10 @@ const compute_shader = @embedFile("mandelbrot.hlsl");
 const WIDTH = 1280;
 const HEIGHT = 720;
 
+// Precomputed zoom constants: exp(±0.1) so zoom in/out cancel exactly
+const ZOOM_IN: f64 = 0.904837418035959573164249059915; // exp(-0.1)
+const ZOOM_OUT: f64 = 1.105170918075647624811707826490; // exp(0.1)
+
 const ViewParams = extern struct {
     center_x: f32,
     center_y: f32,
@@ -383,8 +387,8 @@ fn handleInput(vk: c.WPARAM) void {
     const sin_r = @sin(state.rotation);
 
     switch (vk) {
-        c.VK_UP => state.scale *= 0.9,
-        c.VK_DOWN => state.scale *= 1.1,
+        c.VK_UP => state.scale *= ZOOM_IN,
+        c.VK_DOWN => state.scale *= ZOOM_OUT,
         c.VK_LEFT => state.rotation -= 0.1,
         c.VK_RIGHT => state.rotation += 0.1,
         'W' => {
